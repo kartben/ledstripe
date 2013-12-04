@@ -15,6 +15,8 @@ function LedStripe(){
     														  //required for save WS2801 reset
 	this.sendRgbBuf = null; //function for writing to stripe, depends on stripe type    														  
 
+	this.myTimer = null;
+
 }
 
 LedStripe.prototype = {
@@ -129,18 +131,22 @@ LedStripe.prototype = {
      * - delay between frames is given in microtimers format,
      *   e.g. 10m for 10 milliseconds 
      */
-	animate : function(buffer,frameDelay, callback){
+	animate : function(buffer,frameDelay, loop, callback){
+	  if (this.myTimer)
+	  		this.myTimer.clearInterval();
 	  var row = 0;
 	  var rows = buffer.length/(this.numLEDs*this.bytePerPixel);
 	  if (rows != Math.ceil(rows)) {
 	  	console.log("buffer size is not a multiple of frame size");
 	  	return false;
 	  }
-	  var myTimer = new nanotimer();
+	  this.myTimer = new nanotimer();
 	  console.log("Writing " + rows + " rows for " + this.numLEDs + " LEDs with delay " + frameDelay);
-	  myTimer.setInterval(function(){
+	  this.myTimer.setInterval(function(){
+	  	if (loop && row >= rows)
+	  		row = 0;
 	    if (row>=rows){
-	      myTimer.clearInterval();
+	      this.myTimer.clearInterval();
 	      if (callback)
 		      callback();
 	    } else {
